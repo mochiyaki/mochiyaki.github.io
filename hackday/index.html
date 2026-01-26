@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Sweet Home</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="scene-container"></div>
+    
+    <div id="start-overlay">
+        <div class="start-content">
+            <h1>👾 Claude Code Hack Day 🍓</h1>
+            <p>Talk to the cat and start your journry🐱</p>
+            <button id="start-btn">Click to Enter</button>
+            <div class="controls-hint">
+                <span>WASD</span> move &nbsp;•&nbsp; <span>Mouse</span> look &nbsp;•&nbsp; <span>Click</span> interact
+            </div>
+        </div>
+    </div>
+    
+    <div id="crosshair">+</div>
+    
+    <div id="tooltip"></div>
+    
+    <div id="instructions">
+        WASD to move • Click to interact • ESC to exit
+    </div>
+    
+    <div id="cli-container">
+        <div id="cli-header">Terminal v1.0</div>
+        <div id="cli-output"></div>
+        <div id="cli-input-line">
+            <span class="prompt">$</span>
+            <input type="text" id="cli-input" autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+    
+    <div id="cat-bubble"></div>
+    
+    <!-- <div id="wall-text">HackerSquard</div> -->
+    
+    <script src="app.js"></script>
+</body>
+</html>
