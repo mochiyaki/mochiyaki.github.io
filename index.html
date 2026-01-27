@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JAMMER</title>
+  <title>GGUF</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -104,12 +104,12 @@ code {
   <script>
 const { useState, useEffect, useRef, useCallback } = React;
 const ASCII_BANNER = `
-     ██╗ █████╗ ███╗   ███╗███╗   ███╗███████╗██████╗ 
-     ██║██╔══██╗████╗ ████║████╗ ████║██╔════╝██╔══██╗
-     ██║███████║██╔████╔██║██╔████╔██║█████╗  ██████╔╝
-██   ██║██╔══██║██║╚██╔╝██║██║╚██╔╝██║██╔══╝  ██╔══██╗
-╚█████╔╝██║  ██║██║ ╚═╝ ██║██║ ╚═╝ ██║███████╗██║  ██║
- ╚════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
+ ██████╗  ██████╗ ██╗   ██╗███████╗
+██╔════╝ ██╔════╝ ██║   ██║██╔════╝
+██║  ███╗██║  ███╗██║   ██║█████╗  
+██║   ██║██║   ██║██║   ██║██╔══╝  
+╚██████╔╝╚██████╔╝╚██████╔╝██║     
+ ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝     
                     [ Type /help for commands • v1.0.0 ]
 `;
 const DEFAULT_SYSTEM_PROMPT = `You are a helpful AI assistant running in a terminal environment. Be concise and technical when appropriate. When generating code, use proper markdown code blocks with language specification.`;
@@ -614,4 +614,5 @@ settings.mode==='cloud'&&React.createElement('div',{className:'mb-6 p-4 rounded'
 const root = ReactDOM.createRoot(document.getElementById('root'));root.render(React.createElement(App));
   </script>
 </body>
+
 </html>
