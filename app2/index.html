@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>童語分析 — 兒童語音評估工具</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            teal: { DEFAULT: '#2A7B88', dark: '#1E5A64', light: '#3A9BAA' },
+            coral: { DEFAULT: '#E8836B', dark: '#D66B52', light: '#F0A090' },
+            lavender: { DEFAULT: '#B4A7D6', dark: '#9B8CC4', light: '#D0C8E6' },
+            warm: { gray: '#F7F5F2', cream: '#FBF9F6' },
+            mint: { DEFAULT: '#7ECDB0', light: '#A8E0C8' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans TC', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="index.js"></script>
+</body>
+</html>
