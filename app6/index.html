@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>T5 Adapter Trainer · Live Simulation</title>
+  <style>
+    :root { --ink:#08111d; --panel:#101f33; --paper:#f4f0e8; --muted:#8491a3; --line:#263a52; --coral:#ff6b4a; --cyan:#2dd4bf; --gold:#f6c85f; --violet:#8b7cf6; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:#eff5fb; background:radial-gradient(circle at 82% 5%, #183657 0, transparent 28rem), var(--ink); font:15px/1.45 Inter,Segoe UI,Arial,sans-serif; }
+    .shell { max-width:1240px; margin:auto; padding:32px 28px 42px; }
+    .eyebrow { color:var(--coral); font:700 11px/1 Cascadia Mono,Consolas,monospace; letter-spacing:.14em; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:28px; }
+    h1 { max-width:760px; margin:10px 0 0; font:700 clamp(32px,5vw,54px)/1.03 Georgia,serif; letter-spacing:-.035em; }
+    .subtitle { max-width:470px; margin:0; color:#aebaca; }
+    .tag { display:inline-flex; gap:9px; align-items:center; margin-top:10px; color:#cbd5e1; font:12px Cascadia Mono,Consolas,monospace; }
+    .dot { width:9px; height:9px; border-radius:50%; background:var(--cyan); box-shadow:0 0 0 5px #2dd4bf20; }
+    .grid { display:grid; grid-template-columns:1.75fr .85fr; gap:18px; }
+    .card { border:1px solid var(--line); background:#0b1726cc; box-shadow:0 18px 60px #00000025; }
+    .chart-card { padding:23px 24px 18px; min-height:408px; }
+    .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    h2 { margin:0; font:700 21px Georgia,serif; }
+    .legend { display:flex; flex-wrap:wrap; gap:13px; color:var(--muted); font-size:12px; }
+    .legend span { display:inline-flex; align-items:center; gap:6px; }
+    .legend i { width:20px; height:3px; display:block; }
+    canvas { width:100%; height:245px; display:block; margin:20px 0 9px; }
+    .axis-note { color:#77879a; font:11px Cascadia Mono,Consolas,monospace; text-align:right; }
+    .controls { display:grid; grid-template-columns:auto auto 1fr auto; gap:9px; align-items:center; margin-top:20px; }
+    button { cursor:pointer; border:1px solid #37516f; padding:10px 14px; color:#f8fbff; background:#16283d; font:700 12px Cascadia Mono,Consolas,monospace; transition:.2s; }
+    button:hover { transform:translateY(-1px); border-color:var(--cyan); }
+    button.primary { border-color:var(--coral); background:var(--coral); color:var(--ink); }
+    input[type="range"] { accent-color:var(--coral); width:100%; }
+    .epoch-readout { min-width:98px; color:var(--gold); font:700 12px Cascadia Mono,Consolas,monospace; text-align:right; }
+    .side { display:flex; flex-direction:column; gap:18px; }
+    .metrics { padding:22px; }
+    .metric { padding:14px 0; border-bottom:1px solid var(--line); }
+    .metric:last-child { border-bottom:0; padding-bottom:0; }
+    .metric label { display:block; color:var(--muted); font:700 10px Cascadia Mono,Consolas,monospace; letter-spacing:.08em; }
+    .metric strong { display:block; margin-top:4px; font:700 28px Georgia,serif; }
+    .metric small { color:#91a0b1; }
+    .pipeline { padding:22px; }
+    .flow { position:relative; margin-top:18px; }
+    .flow:before { content:""; position:absolute; left:11px; top:12px; bottom:12px; width:2px; background:#2c4563; }
+    .stage { position:relative; display:grid; grid-template-columns:24px 1fr; gap:11px; align-items:start; margin:15px 0; }
+    .stage b { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:#152a42; color:var(--muted); font:10px Cascadia Mono,Consolas,monospace; z-index:1; }
+    .stage.active b { background:var(--coral); color:var(--ink); box-shadow:0 0 0 5px #ff6b4a22; }
+    .stage.done b { background:var(--cyan); color:var(--ink); }
+    .stage strong { display:block; font-size:13px; }
+    .stage span { color:var(--muted); font-size:11px; }
+    .bottom { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:18px; }
+    .stat { padding:18px 20px; border-top:3px solid var(--accent); background:#0d1b2b; }
+    .stat label { color:var(--muted); font:700 10px Cascadia Mono,Consolas,monospace; letter-spacing:.06em; }
+    .stat strong { display:block; margin-top:5px; font:700 23px Georgia,serif; }
+    .stat p { min-height:16px; margin:2px 0 0; color:#a3b0c0; font-size:11px; }
+    .notice { margin-top:20px; padding:12px 14px; border-left:3px solid var(--violet); color:#acb9c8; background:#8b7cf610; font-size:12px; }
+    @media (max-width:850px) { header,.grid { display:block; } .subtitle { margin-top:16px; } .side { margin-top:18px; } .bottom { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:520px) { .shell { padding:24px 16px; } .chart-card { padding:18px 14px; } .controls { grid-template-columns:1fr 1fr; } .controls input { grid-column:1 / -1; } .bottom { gap:10px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">T5 ADAPTER TRAINER · DEMO MODE</div>
+        <h1>Watch the bridge learn the teacher’s conditioning space.</h1>
+      </div>
+      <div>
+        <p class="subtitle">An illustrative local training run: frozen T5-XXL teacher, frozen pig-clip student, and a trainable resampler adapter.</p>
+        <div class="tag"><span class="dot" id="statusDot"></span><span id="status">SIMULATION RUNNING</span></div>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="card chart-card">
+        <div class="card-head">
+          <div><div class="eyebrow">OPTIMIZATION CURVE</div><h2>Loss falls as semantic alignment rises.</h2></div>
+          <div class="legend"><span><i style="background:var(--coral)"></i>relative MSE</span><span><i style="background:var(--cyan)"></i>validation cosine</span></div>
+        </div>
+        <canvas id="curve" aria-label="Animated training improvement chart"></canvas>
+        <div class="axis-note">EPOCH →</div>
+        <div class="controls">
+          <button class="primary" id="toggle">PAUSE</button><button id="reset">RESET</button>
+          <input id="epochSlider" type="range" min="1" max="50" value="1" aria-label="Epoch" />
+          <div class="epoch-readout" id="epochReadout">EPOCH 01 / 50</div>
+        </div>
+      </article>
+
+      <aside class="side">
+        <article class="card metrics">
+          <div class="eyebrow">LIVE READOUT</div>
+          <div class="metric"><label>TRAINING LOSS</label><strong id="loss">1.000</strong><small id="lossNote">warming up optimizer</small></div>
+          <div class="metric"><label>VALIDATION COSINE</label><strong id="cosine">0.095</strong><small id="cosineNote">teacher / adapter alignment</small></div>
+          <div class="metric"><label>THROUGHPUT</label><strong id="throughput">84.2 <small>prompts/s</small></strong><small>simulated single-GPU runtime</small></div>
+        </article>
+        <article class="card pipeline">
+          <div class="eyebrow">CURRENT BATCH PATH</div>
+          <div class="flow" id="flow">
+            <div class="stage done"><b>01</b><div><strong>Prompt batch</strong><span>tokenize both encoders</span></div></div>
+            <div class="stage active"><b>02</b><div><strong>Frozen encoders</strong><span>teacher target + student hidden states</span></div></div>
+            <div class="stage"><b>03</b><div><strong>Bridge adapter</strong><span>120 learned queries cross-attend</span></div></div>
+            <div class="stage"><b>04</b><div><strong>Validation gate</strong><span>cosine and relative MSE update</span></div></div>
+          </div>
+        </article>
+      </aside>
+    </section>
+
+    <section class="bottom">
+      <div class="stat" style="--accent:var(--coral)"><label>STEP</label><strong id="step">000,000</strong><p>4,096 prompts / epoch</p></div>
+      <div class="stat" style="--accent:var(--gold)"><label>LEARNING RATE</label><strong id="lr">2.00e-4</strong><p>warmup + cosine decay</p></div>
+      <div class="stat" style="--accent:var(--violet)"><label>BEST COSINE</label><strong id="best">0.095</strong><p>validation checkpoint</p></div>
+      <div class="stat" style="--accent:var(--cyan)"><label>ADAPTER OUTPUT</label><strong>120 × 4096</strong><p>PixArt-ready embedding</p></div>
+    </section>
+    <div class="notice">Demo values are simulated to illustrate the training loop. The real trainer’s artifacts, CSV logs, and validation outputs remain the source of truth.</div>
+  </main>
+
+  <script>
+    const maxEpoch = 50;
+    let epoch = 1, running = true, timer;
+    const $ = (id) => document.getElementById(id);
+    const canvas = $('curve'), ctx = canvas.getContext('2d');
+    const lossSeries = Array.from({length:maxEpoch}, (_, i) => Math.max(.16, 1.05 * Math.exp(-i / 15) + .09 + Math.sin(i * 1.7) * .028));
+    const cosineSeries = Array.from({length:maxEpoch}, (_, i) => Math.min(.942, .095 + .86 * (1 - Math.exp(-i / 16)) + Math.sin(i * 1.3) * .012));
+
+    function metricsAt(i) {
+      const loss = lossSeries[i - 1], cosine = cosineSeries[i - 1];
+      return { loss, cosine, throughput: 82 + Math.sin(i * .9) * 3.4 + i * .05, step: i * 4096, lr: i < 7 ? 2e-4 * i / 7 : 2e-4 * (.1 + .9 * .5 * (1 + Math.cos(Math.PI * (i - 7) / 43))) };
+    }
+    function draw() {
+      const rect = canvas.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+      canvas.width = rect.width * dpr; canvas.height = rect.height * dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+      const w=rect.width, h=rect.height, pad={l:38,r:16,t:16,b:26}, iw=w-pad.l-pad.r, ih=h-pad.t-pad.b;
+      ctx.clearRect(0,0,w,h); ctx.lineWidth=1;
+      ctx.strokeStyle='#223850'; ctx.fillStyle='#718096'; ctx.font='10px Cascadia Mono, monospace';
+      [0,.25,.5,.75,1].forEach((t) => { const y=pad.t+ih*t; ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke(); ctx.fillText((1-t).toFixed(2),3,y+3); });
+      [0,10,20,30,40,50].forEach((x) => { const px=pad.l+iw*x/maxEpoch; ctx.fillText(x,px-4,h-6); });
+      const path = (values, color, scale) => { ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath(); values.slice(0,epoch).forEach((v,i)=>{const x=pad.l+iw*(i+1)/maxEpoch,y=pad.t+ih*(1-scale(v));i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke(); const i=epoch-1,v=values[i],x=pad.l+iw*(i+1)/maxEpoch,y=pad.t+ih*(1-scale(v));ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill(); };
+      path(lossSeries,'#ff6b4a',v => 1-v/1.15); path(cosineSeries,'#2dd4bf',v => v);
+      const x=pad.l+iw*epoch/maxEpoch;ctx.strokeStyle='#f6c85f';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke();ctx.setLineDash([]);
+    }
+    function update() {
+      const m=metricsAt(epoch); $('loss').textContent=m.loss.toFixed(3); $('cosine').textContent=m.cosine.toFixed(3); $('throughput').innerHTML=`${m.throughput.toFixed(1)} <small>prompts/s</small>`;
+      $('step').textContent=m.step.toLocaleString('en-US').padStart(7,'0'); $('lr').textContent=m.lr.toExponential(2); $('best').textContent=Math.max(...cosineSeries.slice(0,epoch)).toFixed(3);
+      $('epochReadout').textContent=`EPOCH ${String(epoch).padStart(2,'0')} / ${maxEpoch}`; $('epochSlider').value=epoch;
+      $('lossNote').textContent=epoch < 8 ? 'warming up optimizer' : epoch < 35 ? 'converging on teacher space' : 'fine-tuning semantic detail';
+      $('cosineNote').textContent=epoch < 12 ? 'alignment emerging' : epoch < 36 ? 'validation steadily improving' : 'approaching plateau';
+      [...document.querySelectorAll('.stage')].forEach((s,i)=>s.className='stage '+(i < (epoch % 4) ? 'done' : i === (epoch % 4) ? 'active' : ''));
+      draw();
+    }
+    function setRunning(next) { running=next; $('toggle').textContent=running?'PAUSE':'PLAY'; $('status').textContent=running?'SIMULATION RUNNING':'SIMULATION PAUSED'; $('statusDot').style.background=running?'var(--cyan)':'var(--gold)'; clearInterval(timer); if(running) timer=setInterval(()=>{epoch=epoch===maxEpoch?1:epoch+1;update();},900); }
+    $('toggle').onclick=()=>setRunning(!running); $('reset').onclick=()=>{epoch=1;update();}; $('epochSlider').oninput=e=>{epoch=+e.target.value;update();};
+    addEventListener('resize',draw); update(); setRunning(true);
+  </script>
+</body>
+</html>
