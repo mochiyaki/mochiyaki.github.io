@@ -2,7 +2,7 @@
 //  · Copy: Scream (C1): Adam's cyan sound cones; Copy: Flash (C4): Brian's white flash cones and a blink of the screen;
 //    Clone Burst (C6): violet rings where the copies split off and where all three land
 //  · the hop slams (N6, C5, the stomp): an orange ring under each landing
-//  · Overclock GIGA CONNECT: an aqua vignette and the cut-in; a ring and a shower of tiles under every giant hop; a
+//  · Overclock GIGA CONNECT: a green vignette and the cut-in; a ring and a shower of tiles under every giant hop; a
 //    swirl round the giant spin; the belly flop's two rings, sparks and a flash
 import * as THREE from 'three';
 import { on } from '../../core/events.js';
@@ -12,16 +12,16 @@ import { createFx } from '../shared/fx.js';
 import { CONNECTOR_MUSOU as M } from './musou.js';
 import { MOVES, CLONES } from './moves.js';
 
-const AQUA = [0.5, 2.6, 3.0], ORANGE = [3.0, 1.3, 0.3], VIOLET = [1.8, 0.9, 3.0], WHITE = [2.8, 2.7, 2.4];
+const AQUA = [0.6, 3.0, 1.3], ORANGE = [3.0, 1.3, 0.3], VIOLET = [1.8, 0.9, 3.0], WHITE = [2.8, 2.7, 2.4];
 
 export function createMusouView(scene, game) {
   const mu = game.musou, hero = game.hero;
   const fx = createFx(scene);
   const ov = createOverlay({ sub: 'Giga Connect ×100', seal: 'CONNECTOR',
-    css: { big: 'color:#eaffff; text-shadow: 0 0 2vh rgba(63,207,232,.9), 0 0 5vh rgba(255,138,30,.6);', sub: 'color:#ffd9a8; text-shadow: 0 0 1vh rgba(0,0,0,.7);',
+    css: { big: 'color:#eafff0; text-shadow: 0 0 2vh rgba(70,224,122,.9), 0 0 5vh rgba(255,138,30,.6);', sub: 'color:#ffd9a8; text-shadow: 0 0 1vh rgba(0,0,0,.7);',
       seal: 'background:#ff8a1e; box-shadow: 0 0 2vh rgba(255,138,30,.6);' } });
-  ov.dim.style.background = 'radial-gradient(ellipse at 50% 55%, rgba(220,250,255,1) 25%, rgba(0,30,48,1) 100%)';
-  ov.wash.style.background = 'radial-gradient(circle at 50% 60%, rgba(230,255,255,0.9), rgba(255,160,60,0.25) 70%)';
+  ov.dim.style.background = 'radial-gradient(ellipse at 50% 55%, rgba(220,255,230,1) 25%, rgba(0,40,20,1) 100%)';
+  ov.wash.style.background = 'radial-gradient(circle at 50% 60%, rgba(230,255,240,0.9), rgba(255,160,60,0.25) 70%)';
   const swirl = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 64, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(...AQUA), transparent: true, opacity: 0,
     blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
   swirl.rotation.x = -Math.PI / 2; swirl.visible = false; fx.root.add(swirl);

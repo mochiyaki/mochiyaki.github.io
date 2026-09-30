@@ -1,10 +1,10 @@
 // Voxel Connector: an oval jelly monster. One blob (on the rig's hips joint — the hips channels are its whole body) with
-// two big eyes and a very large mouth painted on its front, three black hairs on top, two little orange balls for hands
-// (floating free: they ride the rig's two weapon joints, so a punch reaches as far as its clip says) and two orange nubs
-// for feet (the rig's foot joints, so its steps still plant). No weapon.
+// two big eyes and a very large mouth — never shut, chewing slowly on its own clock — painted on its front, three black hairs on top, two little
+// orange balls for hands (floating free: they ride the rig's two weapon joints, so a punch reaches as far as its clip
+// says). No feet, no weapon: it hops and slides on its bottom.
 // Render-only life (createConnectorSecondary): the jelly wobble (a spring on the blob's squash: it stretches in a jump,
-// flattens on a landing or a slam, bounces with the run), the face (blink, grin, mouth wide open on an attack, eyes
-// blazing on Copy: Flash), the hairs swaying, the two copies of Clone Burst, and the Overclock's size — GIGA CONNECT
+// flattens on a landing or a slam, bounces with the run), the face (the slow chew, blinks on another clock, the mouth
+// as wide as it goes on a shout, eyes blazing on Copy: Flash), the hairs swaying, the two copies of Clone Burst, and the Overclock's size — GIGA CONNECT
 // blows the whole rig up 4.64× (a hundred times its volume).
 import * as THREE from 'three';
 import { vox } from '../../hero/model.js';
@@ -16,8 +16,8 @@ import { CLONES, MOVES } from './moves.js';
 import { MUSOU_FRAMES } from './anims.js';
 
 export const JC = {
-  jelly: hex('#3fcfe8'), light: hex('#9af2ff'), deep: hex('#1b86b4'), gloss: hex('#eaffff'), orange: hex('#ff8a1e'), orangeD: hex('#d9620c'), orangeL: hex('#ffc070'),
-  hair: hex('#16181c'), white: hex('#ffffff'), pupil: hex('#10131a'), mouth: hex('#4a0f1e'), tongue: hex('#ff6f8a'), tooth: hex('#fff6e6'), flash: hex('#fff7b0'),
+  jelly: hex('#46e07a'), light: hex('#a6ffc4'), deep: hex('#1e8a4a'), gloss: hex('#eafff0'), orange: hex('#ff8a1e'), orangeD: hex('#d9620c'), orangeL: hex('#ffc070'),
+  hair: hex('#16181c'), white: hex('#ffffff'), pupil: hex('#10131a'), mouth: hex('#4a0f1e'), tongue: hex('#ff6f8a'), tongueD: hex('#d94a6a'), tooth: hex('#fff6e6'), toothD: hex('#d8ccbc'), flash: hex('#fff7b0'),
 };
 const BV = 0.03, RX = 15, RY = 20, RZ = 13.5;                       // blob voxel (m), radii (voxels)
 export const BLOB_Y = -0.06;                                          // blob centre under the hips joint (m)
@@ -40,8 +40,9 @@ function jelly(x, y, z) {
   return u > 0.78 ? JC.light : u > 0.5 ? shade(JC.jelly, 1.06) : u > 0.22 ? JC.jelly : JC.deep;
 }
 const EYE = { x: 6.5, y: 5.5, rx: 4.3, ry: 5.4 };
-/** face: 'idle' | 'blink' | 'open' | 'flash' → the colour painted on the front at (x, y), or null. */
-function facePaint(face) {
+/** The face painted on the front: eyes 'idle' | 'blink' | 'flash', mouth open by `k` (0.3 … 1: it is never shut — it
+ *  chews, slowly, all the time). → the colour at (x, y), or null. */
+function facePaint(face, k) {
   return (x, y, z) => {
     if (z < 2) return null;
     const cx = x + 0.5, cy = y + 0.5;
@@ -55,20 +56,28 @@ function facePaint(face) {
       if ((qx / 2.3) ** 2 + (qy / 3.2) ** 2 <= 1) return JC.pupil;
       return JC.white;
     }
-    if (Math.abs(cx) > 10.5) return null;                            // mouth
-    if (face === 'open' || face === 'flash') {
-      const top = -2.5 + 0.02 * cx * cx, bot = -12.5 + 0.075 * cx * cx;
-      if (cy > top || cy < bot) return null;
-      if (cy > top - 1.6) return Math.abs(Math.round(cx)) % 3 === 0 ? JC.mouth : JC.tooth;   // teeth
-      if (cy < bot + 3 && Math.abs(cx) < 5) return JC.tongue;
-      return JC.mouth;
+    if (Math.abs(cx) > 10.5) return null;                            // mouth: the upper lip line stays, the jaw drops by k
+    const top = -2.5 + 0.02 * cx * cx, gap = (10 - 0.055 * cx * cx) * k, bot = top - gap;
+    // the big tongue: once the mouth is past half open it lolls out over the lower lip, further the wider the mouth
+    if (gap > 3.2) {
+      const hang = 1 + (gap - 3.2) * 0.55, half = 5.6 - Math.max(0, bot - cy) * 1.1;
+      if (cy < bot + 4.2 && cy > bot - hang && Math.abs(cx) < half) return cy < bot - hang + 1.2 || Math.abs(cx) > half - 1.1 ? JC.tongueD : JC.tongue;
     }
-    const smile = -6 + 0.045 * cx * cx;                               // the grin: a wide curve, corners up
-    return Math.abs(cy - smile) < 0.9 ? JC.mouth : null;
+    if (cy > top || cy < bot) return null;
+    if (cy > top - 1.6) return Math.abs(Math.round(cx)) % 5 === 0 ? JC.toothD : JC.tooth;   // a tight top row: seams, no gaps
+    if (cy < bot + 1.4) return Math.abs(Math.round(cx) + 2) % 5 === 0 ? JC.toothD : JC.tooth;   // bottom row on the jaw
+    return JC.mouth;
   };
 }
-const blobGeo = (face) => vox([B([-18, -21, -17], [18, 21, 17], jelly), { a: [-13, -14, 2], b: [13, 13, 17], c: facePaint(face), paint: true }], BV, { jitter: 0.05, ao: 0.28 });
-const FACES = ['idle', 'blink', 'open', 'flash'];
+const blobGeo = (face, k) => vox([B([-18, -21, -17], [18, 21, 17], jelly), { a: [-13, -15, 2], b: [13, 13, 17], c: facePaint(face, k), paint: true }], BV, { jitter: 0.05, ao: 0.28 });
+const EYES = ['idle', 'blink', 'flash'], MOUTH = [0.3, 0.5, 0.72, 1];   // the baked variants: 3 eye states × 4 jaw positions
+/** Jaw position 0-3 of the slow chew at time t (s): one chew ≈ 5.4 s (drifting between ≈ 4.6 and 6.2 s, never in step
+ *  with the blinks) — opens over 0.7 s, HOLDS open for ≈ 2.6 s, closes over 1 s, rests nearly shut for ≈ 1 s. */
+export const chew = (t) => {
+  const u = (t / 5.4 + 0.12 * Math.sin(t * 0.37)) % 1;                // the chew's phase; its rate wanders but never reverses
+  const o = u < 0.13 ? u / 0.13 : u < 0.62 ? 1 : u < 0.8 ? 1 - (u - 0.62) / 0.18 : 0;
+  return Math.max(0, Math.min(3, Math.floor(o * 3.999)));
+};
 
 const ballGeo = (r, c, cL, cD, sx = 1, sy = 1, sz = 1) => vox([B([-7, -7, -8], [7, 7, 8], (x, y, z) => {
   const d = ((x + 0.5) / (r * sx)) ** 2 + ((y + 0.5) / (r * sy)) ** 2 + ((z + 0.5) / (r * sz)) ** 2;
@@ -77,12 +86,13 @@ const ballGeo = (r, c, cL, cD, sx = 1, sy = 1, sz = 1) => vox([B([-7, -7, -8], [
 const hairGeo = (k) => vox([B([0, 0, 0], [1, 8 + k, 1], JC.hair), B([1, 7 + k, 0], [3, 8 + k, 1], JC.hair), B([2, 5 + k, 0], [3, 7 + k, 1], JC.hair)], BV, { off: [-0.5, 0, -0.5], jitter: 0.02, ao: 0.1 });
 
 export function createConnectorModel(rig) {
-  const mat = fighterMaterial({ roughness: 0.28, metalness: 0, emissive: new THREE.Color(0x0a4a66), emissiveIntensity: 0.18 }, 0.35, 1.1);
+  const mat = fighterMaterial({ roughness: 0.28, metalness: 0, emissive: new THREE.Color(0x0a5a2a), emissiveIntensity: 0.18 }, 0.35, 1.1);
   const ballMat = fighterMaterial({ roughness: 0.4, emissive: new THREE.Color(0x5a2400), emissiveIntensity: 0.2 }, 0.35, 0.9);
   const meshes = {};
   const add = (parent, geo, name, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = o.receiveShadow = true; parent.add(o); meshes[name] = o; return o; };
-  const faces = Object.fromEntries(FACES.map((f) => [f, blobGeo(f)]));
-  const blob = add(rig.joints.hips, faces.idle, 'blob', mat);
+  const faces = {};
+  for (const e of EYES) MOUTH.forEach((k, i) => { faces[e + i] = blobGeo(e, k); });
+  const blob = add(rig.joints.hips, faces.idle3, 'blob', mat);
   blob.position.y = BLOB_Y;
   const hairMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.5 });
   const hairs = [-1, 0, 1].map((k) => {
@@ -90,9 +100,8 @@ export function createConnectorModel(rig) {
     h.position.set(k * 0.11, 0.58 - Math.abs(k) * 0.03, 0.02); h.rotation.z = -k * 0.4; h.rotation.y = k ? 0 : Math.PI;
     return h;
   });
-  const hand = ballGeo(4.2, JC.orange, JC.orangeL, JC.orangeD), foot = ballGeo(4.4, JC.orange, JC.orangeL, JC.orangeD, 1, 0.6, 1.35);
+  const hand = ballGeo(4.2, JC.orange, JC.orangeL, JC.orangeD);
   add(rig.joints.weapon, hand, 'handR', ballMat); add(rig.joints.weaponL, hand, 'handL', ballMat);
-  for (const s of ['L', 'R']) { const f = add(rig.joints['foot' + s], foot, 'foot' + s, ballMat); f.position.set(0, -0.02, 0.05); }
   rig.connector = { blob, hairs, faces };
   return { meshes, material: mat };
 }
@@ -111,7 +120,7 @@ export function createConnectorSecondary(scene, rig, mat, hero) {
   const clones = [-1, 1].map((side) => ({ side, meshes: src.map((m) => { const c = new THREE.Mesh(m.geometry, cloneMat); c.matrixAutoUpdate = false; c.visible = false; c.frustumCulled = false;
     c.castShadow = true; scene.add(c); return c; }) }));
   const _T = new THREE.Matrix4();
-  let t = 0, y = 1, v = 0, face = 'idle', lastMove = -1;
+  let t = 0, y = 1, v = 0, face = '', lastMove = -1;
   return {
     reset() { y = 1; v = 0; },
     update(dt) {
@@ -119,18 +128,18 @@ export function createConnectorSecondary(scene, rig, mat, hero) {
       const h = hero;
       // ---- squash target from what it is doing; a spring follows it (k 170, damping 12: two or three wobbles)
       let want = 1 + 0.03 * Math.sin(t * 2.4);
-      let nf = Math.sin(t * 1.9) > 0.985 || (t % 3.4) < 0.12 ? 'blink' : 'idle';
+      let nf = (t % 3.4) < 0.12 || (t % 7.9) < 0.1 ? 'blink' : 'idle', jaw = chew(t);   // eyes; the jaw chews on its own clock
       if (h) {
-        if (h.dead) { want = 0.5; nf = 'blink'; }
+        if (h.dead) { want = 0.5; nf = 'blink'; jaw = 1; }
         else if (h.state === 'run') want = 1 + 0.08 * Math.sin(h.runPhase * 2) * Math.min(1, h.speed / 8);
         else if (h.state === 'jump') want = h.vy > 0 ? 1.16 : 1.06;
         else if (h.state === 'land') want = 0.8;
-        else if (h.state === 'hurt') { want = 0.88; nf = 'open'; }
-        else if (h.state === 'musou') { want = 1; nf = 'open'; }
+        else if (h.state === 'hurt') { want = 0.88; jaw = 3; }
+        else if (h.state === 'musou') { want = 1; jaw = 3; }
         else if (h.state === 'attack') {
           const m = MOVES[h.move], o = OPEN_MOVES[h.move];
           if (h.moveSeq !== lastMove) { lastMove = h.moveSeq; v += 1.6; }                    // every move starts with a wobble
-          if (o && h.moveT >= o[0] && h.moveT <= o[1]) nf = 'open';
+          if (o && h.moveT >= o[0] && h.moveT <= o[1]) jaw = 3;                                // a shout: as wide as it goes
           if (h.move === 'c4' && h.moveT >= 12 && h.moveT <= 44) nf = 'flash';
           if (SLAMS.includes(h.move)) for (const w of m.hits) if (h.moveT >= w.f[0] && h.moveT < w.f[0] + 6) want = 0.72;   // flat on a slam
         }
@@ -141,7 +150,8 @@ export function createConnectorSecondary(scene, rig, mat, hero) {
       const xz = 1 / Math.sqrt(y);
       blob.scale.set(xz, y, xz);
       blob.position.y = BLOB_Y + (y - 1) * 0.56;                      // its bottom stays where it was
-      if (nf !== face) { face = nf; blob.geometry = C.faces[face]; }
+      const key = nf + jaw;
+      if (key !== face) { face = key; blob.geometry = C.faces[key]; }
       C.hairs.forEach((m, k) => {
         const sway = Math.sin(t * 2.2 + k * 1.3) * 0.12 + v * 0.06;
         m.rotation.z = -(k - 1) * 0.4 + sway; m.rotation.x = (h ? -Math.min(0.6, h.speed * 0.05) : 0) + Math.sin(t * 1.7 + k) * 0.06;
