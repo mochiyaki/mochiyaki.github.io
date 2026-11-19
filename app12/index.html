@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Asset Viewer</title>
+    <script type="module" crossorigin src="/assets/index-CsiEGfdt.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BzWrhvvP.css">
+  </head>
+  <body>
+    <div id="app">
+      <!-- WebGL Viewport -->
+      <div id="viewport" class="viewport"></div>
+
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>3D Asset Viewer</h1>
+            <span id="file-badge" class="file-badge hidden"></span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <input
+            id="file-input"
+            type="file"
+            multiple
+            accept=".glb,.gltf,.obj,.mtl,.ply,.fbx,.stl,.dae,.3ds,.bin,.png,.jpg,.jpeg,.webp,.tga,.bmp"
+            hidden
+          />
+          <button id="btn-open" class="btn btn-primary" title="Open 3D model file(s) (O)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Open File(s)
+          </button>
+          <button id="btn-demo" class="btn btn-secondary" title="Load procedural PBR sample mesh">
+            Demo Mesh
+          </button>
+          <button id="btn-screenshot" class="btn btn-icon" title="Save PNG Screenshot">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </button>
+          <button id="btn-toggle-panel" class="btn btn-icon" title="Toggle Inspector Panel (I)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="15" y1="3" x2="15" y2="21" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Empty State / Welcome Overlay -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+              <line x1="12" y1="22.08" x2="12" y2="12" />
+            </svg>
+          </div>
+          <h2>Drop 3D assets here</h2>
+          <p>Drag &amp; drop a model file or a folder containing textures &amp; materials.</p>
+          <div class="format-tags">
+            <span>.glb</span>
+            <span>.gltf</span>
+            <span>.obj</span>
+            <span>.ply</span>
+            <span>.fbx</span>
+            <span>.stl</span>
+            <span>.dae</span>
+            <span>.3ds</span>
+          </div>
+          <div class="empty-actions">
+            <button id="btn-empty-open" class="btn btn-primary">Browse Files</button>
+            <button id="btn-empty-demo" class="btn btn-secondary">Load Demo Asset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drag & Drop Active Overlay -->
+      <div id="drop-overlay" class="drop-overlay hidden">
+        <div class="drop-overlay-box">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <p>Release to load 3D asset</p>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <span id="loading-text">Loading model...</span>
+      </div>
+
+      <!-- Error Toast -->
+      <div id="toast" class="toast hidden" role="alert"></div>
+
+      <!-- Collapsible Inspector Sidebar -->
+      <aside id="inspector" class="inspector">
+        <!-- Asset Stats -->
+        <section class="panel-section">
+          <h3>Asset Info</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">Meshes</span>
+              <span id="stat-meshes" class="stat-value">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Vertices</span>
+              <span id="stat-vertices" class="stat-value">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Triangles</span>
+              <span id="stat-triangles" class="stat-value">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Materials</span>
+              <span id="stat-materials" class="stat-value">—</span>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Dimensions (W × H × D)</span>
+            <span id="stat-dims" class="stat-value mono">—</span>
+          </div>
+        </section>
+
+        <!-- Animations (shown only when clips exist) -->
+        <section id="section-animations" class="panel-section hidden">
+          <h3>Animations</h3>
+          <div class="control-row">
+            <select id="anim-select" class="select"></select>
+            <button id="btn-anim-play" class="btn btn-secondary btn-sm">Pause</button>
+          </div>
+          <div class="slider-row">
+            <label for="anim-speed">Speed <span id="anim-speed-val">1.0x</span></label>
+            <input id="anim-speed" type="range" min="0" max="2.5" step="0.1" value="1" />
+          </div>
+        </section>
+
+        <!-- Display Options -->
+        <section class="panel-section">
+          <h3>Display</h3>
+          <div class="toggle-grid">
+            <label class="toggle">
+              <input id="chk-wireframe" type="checkbox" />
+              <span>Wireframe</span>
+            </label>
+            <label class="toggle">
+              <input id="chk-grid" type="checkbox" checked />
+              <span>Grid</span>
+            </label>
+            <label class="toggle">
+              <input id="chk-axes" type="checkbox" />
+              <span>Axes</span>
+            </label>
+            <label class="toggle">
+              <input id="chk-bbox" type="checkbox" />
+              <span>Bounds</span>
+            </label>
+            <label class="toggle">
+              <input id="chk-autorotate" type="checkbox" />
+              <span>Auto-Rotate</span>
+            </label>
+            <label class="toggle">
+              <input id="chk-flat" type="checkbox" />
+              <span>Flat Shading</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Lighting & Environment -->
+        <section class="panel-section">
+          <h3>Lighting &amp; Scene</h3>
+          <div class="control-row">
+            <label class="inline-label" for="bg-preset">Backdrop</label>
+            <select id="bg-preset" class="select">
+              <option value="studio" selected>Studio Dark</option>
+              <option value="neutral">Neutral Gray</option>
+              <option value="light">Light Studio</option>
+              <option value="midnight">Midnight</option>
+            </select>
+          </div>
+          <div class="slider-row">
+            <label for="slider-exposure">Exposure <span id="val-exposure">1.00</span></label>
+            <input id="slider-exposure" type="range" min="0.2" max="2.5" step="0.05" value="1.0" />
+          </div>
+          <div class="slider-row">
+            <label for="slider-env">IBL Intensity <span id="val-env">1.00</span></label>
+            <input id="slider-env" type="range" min="0" max="2.5" step="0.05" value="1.0" />
+          </div>
+          <div class="slider-row">
+            <label for="slider-light">Key Light <span id="val-light">1.50</span></label>
+            <input id="slider-light" type="range" min="0" max="4" step="0.1" value="1.5" />
+          </div>
+        </section>
+
+        <!-- Camera -->
+        <section class="panel-section">
+          <h3>Camera</h3>
+          <div class="cam-grid">
+            <button class="btn btn-secondary btn-sm" data-cam="front">Front</button>
+            <button class="btn btn-secondary btn-sm" data-cam="back">Back</button>
+            <button class="btn btn-secondary btn-sm" data-cam="left">Left</button>
+            <button class="btn btn-secondary btn-sm" data-cam="right">Right</button>
+            <button class="btn btn-secondary btn-sm" data-cam="top">Top</button>
+            <button class="btn btn-secondary btn-sm" data-cam="iso">Iso</button>
+          </div>
+          <button id="btn-reset-cam" class="btn btn-secondary btn-full">Reset &amp; Fit View (R)</button>
+        </section>
+
+        <!-- Shortcuts Hint -->
+        <section class="panel-section shortcuts-hint">
+          <span><strong>Drag</strong> Orbit</span>
+          <span><strong>Right-Drag</strong> Pan</span>
+          <span><strong>Scroll</strong> Zoom</span>
+          <span><strong>R</strong> Reset</span>
+          <span><strong>W</strong> Wireframe</span>
+        </section>
+      </aside>
+    </div>
+
+  </body>
+</html>
